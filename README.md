@@ -5,7 +5,7 @@ Supports controlled and uncontrolled usage, async data loading, error handling, 
 
 ---
 
-## ✨ Features
+## Features
 
 - Controlled and uncontrolled modes
 - Async option loading support
@@ -16,9 +16,6 @@ Supports controlled and uncontrolled usage, async data loading, error handling, 
 - Clear / reset selection
 
 
----
-
-## 📦 Installation
 
 
 
