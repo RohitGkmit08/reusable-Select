@@ -1,0 +1,76 @@
+
+.form-container {
+  max-width: 600px;
+  margin: 60px auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.select-wrapper {
+  position: relative;
+  outline: none;
+}
+
+.select-control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  color: #333;
+  cursor: pointer;
+}
+
+.select-control:hover {
+  background-color: #f2f2f2;
+}
+
+.select-clear {
+  margin-left: 8px;
+  color: #666;
+  cursor: pointer;
+}
+
+.select-clear:hover {
+  color: #000;
+}
+
+.select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;          
+  width: 100%;      
+  margin-top: 4px;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+
+.select-search {
+  width: 100%;
+  margin: 8px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.select-option {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.select-option:hover {
+  background-color: #eee;
+}
+
+.select-empty {
+  padding: 10px;
+  text-align: center;
+  color: #777;
+}
