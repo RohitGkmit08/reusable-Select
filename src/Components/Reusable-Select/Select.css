@@ -1,3 +1,12 @@
+:root {
+  --color-primary: cadetblue;
+  --color-highlight: #cfe8ea;
+  --color-selected: #b7dde0;
+  --color-border: cadetblue;
+  --color-text-muted: #888;
+  --color-bg: #ffffff;
+}
+
 .form-container {
   width: 420px;
   margin: 40px auto;
@@ -7,6 +16,7 @@
 .select-wrapper {
   position: relative;
   width: 100%;
+  outline: none;
 }
 
 .select-trigger {
@@ -15,20 +25,21 @@
   gap: 8px;
   padding: 8px;
   width: 100%;
-  border: 1px solid cadetblue;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
   box-sizing: border-box;
+
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  cursor: pointer;
 }
 
 .chips {
   display: flex;
   gap: 6px;
   flex: 1;
+  min-width: 0;
   overflow-x: auto;
   white-space: nowrap;
-  min-width: 0;
 }
 
 .chip {
@@ -36,11 +47,11 @@
   align-items: center;
   gap: 6px;
 
-  background: cadetblue;
-  color: #fff;
-
   padding: 4px 10px;
   border-radius: 16px;
+
+  background: var(--color-primary);
+  color: #fff;
   font-size: 13px;
 }
 
@@ -50,10 +61,11 @@
   color: #fff;
   cursor: pointer;
   font-size: 14px;
+  line-height: 1;
 }
 
 .placeholder {
-  color: #888;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -61,7 +73,8 @@
   border: none;
   background: none;
   cursor: pointer;
-  color: cadetblue;
+
+  color: var(--color-primary);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -71,10 +84,11 @@
   padding: 8px;
   box-sizing: border-box;
 
-  border: 1px solid cadetblue;
+  border: 1px solid var(--color-border);
   border-top: none;
   outline: none;
 }
+
 
 .select-dropdown {
   max-height: 200px;
@@ -84,10 +98,11 @@
   padding: 0;
   list-style: none;
 
-  border: 1px solid cadetblue;
+  border: 1px solid var(--color-border);
   border-top: none;
-  background: #fff;
+  background: var(--color-bg);
 }
+
 
 .select-option {
   padding: 8px 10px;
@@ -99,11 +114,11 @@
 }
 
 .select-option.highlighted {
-  background: #cfe8ea;
+  background: var(--color-highlight);
 }
 
 .select-option.selected {
-  background: #b7dde0;
+  background: var(--color-selected);
 }
 
 .select-loading,

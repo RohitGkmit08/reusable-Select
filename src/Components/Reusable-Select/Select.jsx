@@ -18,6 +18,7 @@ const Select = ({
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
@@ -36,7 +37,6 @@ const Select = ({
 
   const defaultRenderValue = option => option.label;
 
-
   useEffect(() => {
     const handler = e => {
       if (!wrapperRef.current?.contains(e.target)) {
@@ -44,50 +44,42 @@ const Select = ({
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    return () =>
+      document.removeEventListener("mousedown", handler);
   }, []);
 
-
   useEffect(() => {
-    if (open) {
-      inputRef.current?.focus();
-      setHighlightedIndex(0);
-    }
-  }, [open]);
+    if (!open) return;
 
+    inputRef.current?.focus();
+    setHighlightedIndex(0);
+  }, [open]);
 
   useEffect(() => {
     if (options.length > prevOptionsLengthRef.current) {
       fetchingMoreRef.current = false;
-      prevOptionsLengthRef.current = options.length;
     }
-  }, [options.length]);
 
-
-  useEffect(() => {
-    if (!open || !listRef.current) return;
-    const item = listRef.current.children[highlightedIndex];
-    item?.scrollIntoView({ block: "nearest" });
-  }, [highlightedIndex, open]);
-
-  useEffect(() => {
+    prevOptionsLengthRef.current = options.length;
     setHighlightedIndex(0);
   }, [options]);
 
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    listRef.current.children[
+      highlightedIndex
+    ]?.scrollIntoView({ block: "nearest" });
+  }, [highlightedIndex, open]);
 
   const handleSearchChange = e => {
-  const raw = e.target.value;
-  setSearchQuery(raw);
+    const raw = e.target.value;
+    setSearchQuery(raw);
 
-  clearTimeout(debounceRef.current);
-
-  debounceRef.current = setTimeout(() => {
-    if (onSearch) {
-      const trimmed = raw.trim();
-      onSearch(trimmed);
-    }
-  }, 300);
-};
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearch?.(raw.trim());
+    }, 300);
+  };
 
   const handleScroll = e => {
     if (!hasMore || fetchingMoreRef.current) return;
@@ -99,31 +91,10 @@ const Select = ({
     }
   };
 
-  const handleKeyDown = e => {
-    if (!open) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex(i => Math.min(i + 1, options.length - 1));
-    }
-
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex(i => Math.max(i - 1, 0));
-    }
-
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const option = options[highlightedIndex];
-      option && handleSelect(option);
-    }
-
-    if (e.key === "Escape") setOpen(false);
-  };
-
-
   const handleSelect = option => {
-    const exists = value.some(v => v.id === option.id);
+    const exists = value.some(
+      selectedItem => selectedItem.id === option.id
+    );
 
     if (!multiple) {
       onChange([option]);
@@ -131,11 +102,13 @@ const Select = ({
       return;
     }
 
-    if (exists) {
-      onChange(value.filter(v => v.id !== option.id));
-    } else {
-      onChange([...value, option]);
-    }
+    onChange(
+      exists
+        ? value.filter(
+            selectedItem => selectedItem.id !== option.id
+          )
+        : [...value, option]
+    );
   };
 
   return (
@@ -143,24 +116,27 @@ const Select = ({
       ref={wrapperRef}
       className="select-wrapper"
       tabIndex={0}
-      onKeyDown={handleKeyDown}
     >
-
       <div
         className="select-trigger"
         onClick={() => setOpen(o => !o)}
       >
-       <div className="chips"> 
-          {value.map(v => (
-            <span key={v.id} className="chip">
-              {(renderValue ?? defaultRenderValue)(v)}
+        <div className="chips">
+          {value.map(item => (
+            <span key={item.id} className="chip">
+              {(renderValue ?? defaultRenderValue)(item)}
 
               {multiple && (
                 <button
                   className="chip-remove"
                   onClick={e => {
                     e.stopPropagation();
-                    onChange(value.filter(i => i.id !== v.id));
+                    onChange(
+                      value.filter(
+                        selectedItem =>
+                          selectedItem.id !== item.id
+                      )
+                    );
                   }}
                 >
                   ×
@@ -202,29 +178,34 @@ const Select = ({
             className="select-dropdown"
             onScroll={handleScroll}
           >
-           {options.map((option, index) => {
-              const selected = value.some(v => v.id === option.id);
+            {options.map((option, index) => {
+              const selected = value.some(
+                item => item.id === option.id
+              );
               const highlighted = index === highlightedIndex;
 
-          return (
-            <li
-              key={option.id}
-              className={`select-option ${
-                selected ? "selected" : ""
-              } ${highlighted ? "highlighted" : ""}`}
-              onMouseEnter={() => setHighlightedIndex(index)}
-              onClick={() => handleSelect(option)}
-            >
-              {(renderOption ?? defaultRenderOption)(option, {
-                selected,
-                highlighted,
-                multiple
-              })}
-            </li>
-            );
-          })}
+              return (
+                <li
+                  key={option.id}
+                  className={`select-option ${
+                    selected ? "selected" : ""
+                  } ${highlighted ? "highlighted" : ""}`}
+                  onMouseEnter={() =>
+                    setHighlightedIndex(index)
+                  }
+                  onClick={() => handleSelect(option)}
+                >
+                  {(renderOption ?? defaultRenderOption)(
+                    option,
+                    { selected, highlighted }
+                  )}
+                </li>
+              );
+            })}
 
-            {loading && <li className="select-loading">Loading…</li>}
+            {loading && (
+              <li className="select-loading">Loading…</li>
+            )}
             {!loading && options.length === 0 && (
               <li className="select-empty">No results</li>
             )}

@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import Select from "./Select";
-import "./Select.css"
+import "./Select.css";
 
 const lt = 10;
-const storage_key = "localStorage-key";
+const storage_key = "selected-users";
 const default_id = [12, 37, 100];
+
 const emojis = ["😊", "🔥", "⚡", "🚀", "🌟"];
 const getEmoji = id => emojis[id % emojis.length];
+
+const loadingValueById = id => ({
+  id,
+  label: "Loading"
+});
 
 const normalizeUser = user => ({
   id: user.id,
@@ -14,32 +20,14 @@ const normalizeUser = user => ({
 });
 
 const AsyncSelect = () => {
-
   const [value, setValue] = useState(() => {
-    let initialValue = [];
-
     try {
       const stored = localStorage.getItem(storage_key);
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {}
 
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          initialValue = parsed;
-        }
-      } else {
-        initialValue = default_id.map(id => ({
-          id,
-          label: "Loading"
-        }));
-      }
-    } catch (err) {
-      initialValue = default_id.map(id => ({
-        id,
-        label: "Loading"
-      }));
-    }
-
-    return initialValue;
+    return default_id.map(loadingValueById);
   });
 
   const [options, setOptions] = useState([]);
@@ -69,20 +57,12 @@ const AsyncSelect = () => {
 
       if (requestId !== requestIdRef.current) return;
 
-      let mapped;
-      if (data.users) {
-        mapped = data.users.map(user => normalizeUser(user));
-      } else {
-        mapped = [];
-      }
+      const users = Array.isArray(data.users) ? data.users : [];
+      const mapped = users.map(normalizeUser);
 
-    setOptions(prev => {
-        if (page === 0) {
-          return mapped;
-        }
-        return mergeOptions(prev, mapped);
-      });
-
+      setOptions(prev =>
+        page === 0 ? mapped : mergeOptions(prev, mapped)
+      );
 
       setHasMore(mapped.length === lt);
       setLoading(false);
@@ -92,21 +72,15 @@ const AsyncSelect = () => {
   }, [page, query]);
 
   useEffect(() => {
-    for (let i = 0; i < value.length; i++) {
-      const selected = value[i];
+    value.forEach(selectedItem => {
+      const exists = options.some(
+        option => option.id === selectedItem.id
+      );
 
-      let found = false;
-      for (let j = 0; j < options.length; j++) {
-        if (options[j].id === selected.id) {
-          found = true;
-          break;
-        }
+      if (!exists) {
+        fetchUserById(selectedItem.id);
       }
-
-      if (!found) {
-        fetchUserById(selected.id);
-      }
-    }
+    });
   }, [value, options]);
 
   const fetchUserById = async id => {
@@ -116,14 +90,15 @@ const AsyncSelect = () => {
       );
       const data = await res.json();
 
-      if (data && data.id) {
-        const normalized = normalizeUser(data);
-        setOptions(prev => mergeOptions(prev, [normalized]));
-        setValue(prev =>
-          prev.map(v => (v.id === id ? normalized : v))
-        );
-      }
-    } catch (err) {
+      if (!data?.id) return;
+
+      const normalized = normalizeUser(data);
+
+      setOptions(prev => mergeOptions(prev, [normalized]));
+      setValue(prev =>
+        prev.map(item => (item.id === id ? normalized : item))
+      );
+    } catch {
       console.log("Failed to fetch user:", id);
     }
   };
@@ -131,13 +106,9 @@ const AsyncSelect = () => {
   const mergeOptions = (existing, incoming) => {
     const map = new Map();
 
-    for (let i = 0; i < existing.length; i++) {
-      map.set(existing[i].id, existing[i]);
-    }
-
-    for (let i = 0; i < incoming.length; i++) {
-      map.set(incoming[i].id, incoming[i]);
-    }
+    [...existing, ...incoming].forEach(option => {
+      map.set(option.id, option);
+    });
 
     return Array.from(map.values());
   };
@@ -156,11 +127,7 @@ const AsyncSelect = () => {
   };
 
   const handleSearch = q => {
-    if (q) {
-      setQuery(q);
-    } else {
-      setQuery("");
-    }
+    setQuery(q ?? "");
     setPage(0);
     setHasMore(true);
   };
@@ -168,25 +135,17 @@ const AsyncSelect = () => {
   return (
     <div className="form-container">
       <Select
-        multiple={true}
         options={options}
         value={value}
         loading={loading}
         hasMore={hasMore}
         onChange={handleChange}
         onClear={handleClear}
-        onReachEnd={() => setPage(p => p + 1)}
+        onReachEnd={() => setPage(prev => prev + 1)}
         onSearch={handleSearch}
         placeholder="Search user"
         renderOption={(option, { selected }) => (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: "100%"
-            }}
-          >
+          <div style={{ display: "flex", gap: 8 }}>
             <span>{getEmoji(option.id)}</span>
             <span>{option.label}</span>
             {selected && (
