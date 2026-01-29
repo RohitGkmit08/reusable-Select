@@ -1,5 +1,5 @@
-import React from 'react'
-import AsyncSelect from './Components/Reusable-Select/AsyncSelect'
+
+import AsyncSelect from './Components/AsyncSelect'
 const App = () => {
 
   return (

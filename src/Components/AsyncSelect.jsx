@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import Select from "./Select";
 import "./Select.css";
 
-const lt = 10;
-const storage_key = "selected-users";
-const default_id = [12, 37, 100];
+const LIMIT = 10;
+const STORAGE_KEY = "selected-users";
+const DEFAULT_ID = [];
 
 const emojis = ["😊", "🔥", "⚡", "🚀", "🌟"];
 const getEmoji = id => emojis[id % emojis.length];
@@ -22,12 +22,12 @@ const normalizeUser = user => ({
 const AsyncSelect = () => {
   const [value, setValue] = useState(() => {
     try {
-      const stored = localStorage.getItem(storage_key);
+      const stored = localStorage.getItem(STORAGE_KEY);
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) return parsed;
     } catch {}
 
-    return default_id.map(loadingValueById);
+    return DEFAULT_ID.map(loadingValueById);
   });
 
   const [options, setOptions] = useState([]);
@@ -46,8 +46,8 @@ const AsyncSelect = () => {
 
       const params = new URLSearchParams({
         q: query,
-        limit: lt,
-        skip: page * lt
+        limit: LIMIT,
+        skip: page * LIMIT
       });
 
       const res = await fetch(
@@ -64,7 +64,7 @@ const AsyncSelect = () => {
         page === 0 ? mapped : mergeOptions(prev, mapped)
       );
 
-      setHasMore(mapped.length === lt);
+      setHasMore(mapped.length === LIMIT);
       setLoading(false);
     };
 
@@ -116,14 +116,14 @@ const AsyncSelect = () => {
   const handleChange = nextValue => {
     setValue(nextValue);
     localStorage.setItem(
-      storage_key,
+      STORAGE_KEY,
       JSON.stringify(nextValue)
     );
   };
 
   const handleClear = () => {
     setValue([]);
-    localStorage.removeItem(storage_key);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const handleSearch = q => {
@@ -144,6 +144,7 @@ const AsyncSelect = () => {
         onReachEnd={() => setPage(prev => prev + 1)}
         onSearch={handleSearch}
         placeholder="Search user"
+        
         renderOption={(option, { selected }) => (
           <div style={{ display: "flex", gap: 8 }}>
             <span>{getEmoji(option.id)}</span>
@@ -153,9 +154,10 @@ const AsyncSelect = () => {
             )}
           </div>
         )}
-        renderValue={option => (
+
+        renderSelectedValue={option => (
           <span>
-            {getEmoji(option.id)} {option.label}
+          {getEmoji(option.id)} {option.label}
           </span>
         )}
       />
