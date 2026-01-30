@@ -4,31 +4,24 @@ import "./Select.css";
 
 const LIMIT = 10;
 const STORAGE_KEY = "selected-users";
-const DEFAULT_ID = [];
+const DEFAULT_ID = [10, 20, 30];
 
 const emojis = ["😊", "🔥", "⚡", "🚀", "🌟"];
-const getEmoji = id => emojis[id % emojis.length];
+function getEmojiById(userId) {
+  return emojis[userId % emojis.length];
+}
 
-const loadingValueById = id => ({
-  id,
-  label: "Loading"
-});
+function normalizeUser(user) {
+  return {
+    id: user.id,
+    label: `${user.firstName} ${user.lastName}`
+  };
+}
 
-const normalizeUser = user => ({
-  id: user.id,
-  label: `${user.firstName} ${user.lastName}`
-});
+function AsyncSelect() {
 
-const AsyncSelect = () => {
-  const [value, setValue] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
-    } catch {}
-
-    return DEFAULT_ID.map(loadingValueById);
-  });
+  //CONTROLLED MODE
+  const [value, setValue] = useState([]);
 
   const [options, setOptions] = useState([]);
   const [query, setQuery] = useState("");
@@ -38,10 +31,11 @@ const AsyncSelect = () => {
 
   const requestIdRef = useRef(0);
 
+  // Fetch paginated options
   useEffect(() => {
     const requestId = ++requestIdRef.current;
 
-    const fetchUsers = async () => {
+    async function fetchUsers() {
       setLoading(true);
 
       const params = new URLSearchParams({
@@ -50,119 +44,119 @@ const AsyncSelect = () => {
         skip: page * LIMIT
       });
 
-      const res = await fetch(
+      const response = await fetch(
         `https://dummyjson.com/users/search?${params}`
       );
-      const data = await res.json();
+      const data = await response.json();
 
       if (requestId !== requestIdRef.current) return;
 
-      const users = Array.isArray(data.users) ? data.users : [];
-      const mapped = users.map(normalizeUser);
+      const usersArray = Array.isArray(data.users)
+        ? data.users
+        : [];
 
-      setOptions(prev =>
-        page === 0 ? mapped : mergeOptions(prev, mapped)
+      const mappedOptions = usersArray.map(normalizeUser);
+
+      setOptions(previousOptions =>
+        page === 0
+          ? mappedOptions
+          : mergeOptions(previousOptions, mappedOptions)
       );
 
-      setHasMore(mapped.length === LIMIT);
+      setHasMore(mappedOptions.length === LIMIT);
       setLoading(false);
-    };
+    }
 
     fetchUsers();
   }, [page, query]);
 
+  // defaults values - parent updates it through onChange
   useEffect(() => {
-    value.forEach(selectedItem => {
-      const exists = options.some(
-        option => option.id === selectedItem.id
+    async function fetchDefaults() {
+      const results = await Promise.all(
+        DEFAULT_ID.map(async userId => {
+          const res = await fetch(
+            `https://dummyjson.com/users/${userId}`
+          );
+          const data = await res.json();
+          return normalizeUser(data);
+        })
       );
 
-      if (!exists) {
-        fetchUserById(selectedItem.id);
-      }
-    });
-  }, [value, options]);
-
-  const fetchUserById = async id => {
-    try {
-      const res = await fetch(
-        `https://dummyjson.com/users/${id}`
-      );
-      const data = await res.json();
-
-      if (!data?.id) return;
-
-      const normalized = normalizeUser(data);
-
-      setOptions(prev => mergeOptions(prev, [normalized]));
-      setValue(prev =>
-        prev.map(item => (item.id === id ? normalized : item))
-      );
-    } catch {
-      console.log("Failed to fetch user:", id);
+      handleChange(results);
     }
-  };
 
-  const mergeOptions = (existing, incoming) => {
+    fetchDefaults();
+  }, []);
+
+  function mergeOptions(existing, incoming) {
     const map = new Map();
-
     [...existing, ...incoming].forEach(option => {
       map.set(option.id, option);
     });
-
     return Array.from(map.values());
-  };
+  }
 
-  const handleChange = nextValue => {
-    setValue(nextValue);
+  // Side-effect only in uncontrolled
+  // State update only in controlled
+  function handleChange(nextValue) {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify(nextValue)
     );
-  };
 
-  const handleClear = () => {
-    setValue([]);
+    // CONTROLLED
+    setValue(nextValue);
+  }
+
+  function handleClear() {
     localStorage.removeItem(STORAGE_KEY);
-  };
 
-  const handleSearch = q => {
-    setQuery(q ?? "");
+    // CONTROLLED 
+    setValue([]);
+  }
+
+  function handleSearch(searchQuery) {
+    setQuery(searchQuery ?? "");
     setPage(0);
     setHasMore(true);
-  };
+  }
 
   return (
     <div className="form-container">
       <Select
         options={options}
+
+  
+        // uncontrolled: comment value
         value={value}
-        loading={loading}
-        hasMore={hasMore}
+
         onChange={handleChange}
         onClear={handleClear}
-        onReachEnd={() => setPage(prev => prev + 1)}
+        loading={loading}
+        hasMore={hasMore}
+        onReachEnd={() =>
+          setPage(previousPage => previousPage + 1)
+        }
         onSearch={handleSearch}
         placeholder="Search user"
-        
         renderOption={(option, { selected }) => (
           <div style={{ display: "flex", gap: 8 }}>
-            <span>{getEmoji(option.id)}</span>
+            <span>{getEmojiById(option.id)}</span>
             <span>{option.label}</span>
             {selected && (
               <span style={{ marginLeft: "auto" }}>☑️</span>
             )}
           </div>
         )}
-
         renderSelectedValue={option => (
           <span>
-          {getEmoji(option.id)} {option.label}
+            {getEmojiById(option.id)} {option.label}
           </span>
         )}
       />
     </div>
   );
-};
+}
 
 export default AsyncSelect;

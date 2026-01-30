@@ -1,20 +1,46 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Select.css";
 
-export default function Select({
-  options,
+function Select({
+  options = [],
   value,
   onChange,
   onClear,
   onSearch,
   onReachEnd,
-  loading,
-  hasMore,
+  loading = false,
+  hasMore = false,
   multiple = true,
   placeholder,
   renderOption,
   renderSelectedValue
 }) {
+  // Controlled check
+  const isControlled = value !== undefined;
+
+  // Internal state (uncontrolled)
+  const [internalValue, setInternalValue] = useState(
+    multiple ? [] : null
+  );
+
+  const selectedValue = isControlled
+    ? value
+    : internalValue;
+
+  const normalizedValue = multiple
+    ? Array.isArray(selectedValue)
+      ? selectedValue
+      : []
+    : selectedValue ?? null;
+
+  function updateValue(nextValue) {
+    if (!isControlled) {
+      setInternalValue(nextValue);
+    }
+    onChange?.(nextValue);
+  }
+
+  // UI state
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,28 +50,22 @@ export default function Select({
   const listRef = useRef(null);
   const debounceRef = useRef(null);
   const fetchingMoreRef = useRef(false);
-  const prevOptionsLengthRef = useRef(options.length);
+  const previousOptionsLengthRef = useRef(options.length);
   const userNavigatedRef = useRef(false);
 
-  const defaultRenderOption = (opt, { selected }) => (
-    <>
-      {multiple && <input type="checkbox" readOnly checked={selected} />}
-      {opt.label}
-    </>
-  );
-
-  const defaultRenderValue = opt => opt.label;
-
+  // Outside click
   useEffect(() => {
-    const clickOutside = e => {
-      if (!wrapperRef.current?.contains(e.target)) {
+    function handleOutsideClick(event) {
+      if (!wrapperRef.current?.contains(event.target)) {
         setOpen(false);
       }
-    };
-    document.addEventListener("mousedown", clickOutside);
-    return () => document.removeEventListener("mousedown", clickOutside);
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () =>
+      document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  // Focus search
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
@@ -53,14 +73,15 @@ export default function Select({
     }
   }, [open]);
 
+  // Pagination unlock
   useEffect(() => {
-    if (options.length > prevOptionsLengthRef.current) {
+    if (options.length > previousOptionsLengthRef.current) {
       fetchingMoreRef.current = false;
     }
-    prevOptionsLengthRef.current = options.length;
+    previousOptionsLengthRef.current = options.length;
   }, [options.length]);
 
-
+  // Scroll highlight
   useEffect(() => {
     if (!open || !listRef.current) return;
     if (!userNavigatedRef.current) return;
@@ -71,65 +92,83 @@ export default function Select({
     userNavigatedRef.current = false;
   }, [highlightedIndex, open]);
 
-  const handleKeyDown = e => {
+  // Reset search on close
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+      setHighlightedIndex(0);
+      onSearch?.("");
+    }
+  }, [open]);
+
+  function handleKeyDown(event) {
     if (!open) return;
 
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
       userNavigatedRef.current = true;
-      setHighlightedIndex(i => Math.min(i + 1, options.length - 1));
+      setHighlightedIndex(i =>
+        Math.min(i + 1, options.length - 1)
+      );
     }
 
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
       userNavigatedRef.current = true;
-      setHighlightedIndex(i => Math.max(i - 1, 0));
+      setHighlightedIndex(i =>
+        Math.max(i - 1, 0)
+      );
     }
 
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const opt = options[highlightedIndex];
-      opt && handleSelect(opt);
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const option = options[highlightedIndex];
+      option && handleSelect(option);
     }
 
-    if (e.key === "Escape") setOpen(false);
-  };
+    if (event.key === "Escape") {
+      setOpen(false);
+    }
+  }
 
-  const handleSelect = option => {
-    const exists = value.some(val => val.id === option.id);
-
+  function handleSelect(option) {
     if (!multiple) {
-      onChange([option]);
+      updateValue(option);
       setOpen(false);
       return;
     }
 
-    onChange(
-      exists
-        ? value.filter(val => val.id !== option.id)
-        : [...value, option]
+    const exists = normalizedValue.some(
+      item => item.id === option.id
     );
-  };
 
-  const handleScroll = e => {
+    updateValue(
+      exists
+        ? normalizedValue.filter(
+            item => item.id !== option.id
+          )
+        : [...normalizedValue, option]
+    );
+  }
+
+  function handleScroll(event) {
     if (!hasMore || fetchingMoreRef.current) return;
 
-    const el = e.currentTarget;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 5) {
+    const element = event.currentTarget;
+    if (
+      element.scrollTop + element.clientHeight >=
+      element.scrollHeight - 5
+    ) {
       fetchingMoreRef.current = true;
-      onReachEnd();
-    }
-  };
-  
-  useEffect(() => {
-  if (!open) {
-    setSearchQuery("");
-    setHighlightedIndex(0);
-    if(onSearch !== null){
-      onSearch("")
+      onReachEnd?.();
     }
   }
-}, [open]);
+
+  const displayList = multiple
+    ? normalizedValue
+    : normalizedValue
+    ? [normalizedValue]
+    : [];
 
   return (
     <div
@@ -140,18 +179,28 @@ export default function Select({
     >
       <div
         className="select-trigger"
-        onClick={() => setOpen(open => !open)}
+        onClick={() => setOpen(p => !p)}
       >
         <div className="chips">
-          {value.map(val => (
-            <span key={val.id} className="chip">
-              {(renderSelectedValue ?? defaultRenderValue)(val)}
+          {displayList.map(item => (
+            <span key={item.id} className="chip">
+              <span className="chip-content">
+                {renderSelectedValue
+                  ? React.Children.toArray(
+                      renderSelectedValue(item)
+                    )
+                  : item.label}
+              </span>
               {multiple && (
                 <button
                   className="chip-remove"
-                  onClick={e => {
-                    e.stopPropagation();
-                    onChange(value.filter(idx => idx.id !== val.id));
+                  onClick={event => {
+                    event.stopPropagation();
+                    updateValue(
+                      normalizedValue.filter(
+                        v => v.id !== item.id
+                      )
+                    );
                   }}
                 >
                   ×
@@ -159,17 +208,21 @@ export default function Select({
               )}
             </span>
           ))}
-          {value.length === 0 && (
-            <span className="placeholder">{placeholder}</span>
+
+          {displayList.length === 0 && (
+            <span className="placeholder">
+              {placeholder}
+            </span>
           )}
         </div>
 
-        {value.length > 0 && (
+        {displayList.length > 0 && (
           <button
             className="clear-btn"
-            onClick={e => {
-              e.stopPropagation();
-              onClear();
+            onClick={event => {
+              event.stopPropagation();
+              updateValue(multiple ? [] : null);
+              onClear?.();
             }}
           >
             Clear
@@ -183,8 +236,8 @@ export default function Select({
             ref={inputRef}
             className="select-search"
             value={searchQuery}
-            onChange={e => {
-              const val = e.target.value;
+            onChange={event => {
+              const val = event.target.value;
               setSearchQuery(val);
               clearTimeout(debounceRef.current);
               debounceRef.current = setTimeout(
@@ -192,7 +245,6 @@ export default function Select({
                 300
               );
             }}
-            
           />
 
           <ul
@@ -200,28 +252,53 @@ export default function Select({
             className="select-dropdown"
             onScroll={handleScroll}
           >
-            {options.map((opt, idx) => {
-              const selected = value.some(val=> val.id === opt.id);
-              const highlighted = idx === highlightedIndex;
+            {options.map((option, index) => {
+              const selected = multiple
+                ? normalizedValue.some(
+                    v => v.id === option.id
+                  )
+                : normalizedValue?.id === option.id;
+
+              const highlighted =
+                index === highlightedIndex;
 
               return (
                 <li
-                  key={opt.id}
-                  className={`select-option ${selected ? "selected" : ""} ${highlighted ? "highlighted" : ""}`}
-                  onMouseEnter={() => setHighlightedIndex(idx)}
-                  onClick={() => handleSelect(opt)}
+                  key={option.id}
+                  className={`select-option ${
+                    selected ? "selected" : ""
+                  } ${
+                    highlighted ? "highlighted" : ""
+                  }`}
+                  onMouseEnter={() =>
+                    setHighlightedIndex(index)
+                  }
+                  onClick={() =>
+                    handleSelect(option)
+                  }
                 >
-                  {(renderOption ?? defaultRenderOption)(opt, {
-                    selected,
-                    highlighted
-                  })}
+                  {renderOption
+                    ? React.Children.toArray(
+                        renderOption(option, {
+                          selected,
+                          highlighted
+                        })
+                      )
+                    : option.label}
                 </li>
               );
             })}
 
-            {loading && <li className="select-loading">Loading…</li>}
+            {loading && (
+              <li key="loading" className="select-loading">
+                Loading…
+              </li>
+            )}
+
             {!loading && options.length === 0 && (
-              <li className="select-empty">No results</li>
+              <li key="empty" className="select-empty">
+                No results
+              </li>
             )}
           </ul>
         </>
@@ -229,3 +306,5 @@ export default function Select({
     </div>
   );
 }
+
+export default Select;
