@@ -26,7 +26,6 @@
   padding: 8px;
   width: 100%;
   box-sizing: border-box;
-
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-bg);
@@ -38,18 +37,16 @@
   gap: 6px;
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-
   padding: 4px 10px;
   border-radius: 16px;
-
   background: var(--color-primary);
   color: #fff;
   font-size: 13px;
@@ -73,7 +70,6 @@
   border: none;
   background: none;
   cursor: pointer;
-
   color: var(--color-primary);
   font-size: 13px;
   white-space: nowrap;
@@ -83,31 +79,25 @@
   width: 100%;
   padding: 8px;
   box-sizing: border-box;
-
   border: 1px solid var(--color-border);
   border-top: none;
   outline: none;
 }
 
-
 .select-dropdown {
   max-height: 200px;
   overflow-y: auto;
-
   margin: 0;
   padding: 0;
   list-style: none;
-
   border: 1px solid var(--color-border);
   border-top: none;
   background: var(--color-bg);
 }
 
-
 .select-option {
   padding: 8px 10px;
   cursor: pointer;
-
   display: flex;
   align-items: center;
   gap: 8px;
@@ -125,4 +115,14 @@
 .select-empty {
   padding: 8px 10px;
   color: #666;
+}
+
+.option-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.option-check {
+  margin-left: auto;
 }

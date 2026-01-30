@@ -1,10 +1,9 @@
-
-import AsyncSelect from './Components/AsyncSelect'
+import Home from "./Home"
 const App = () => {
 
   return (
     <div>
-      <AsyncSelect/>
+      <Home/>
     </div>
   )
 }

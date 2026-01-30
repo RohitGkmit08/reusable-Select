@@ -1,6 +1,46 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Select.css";
 
+// Reusable keyboard navigation logic
+function handleDropdownKeyDown({
+  event,
+  open,
+  options,
+  highlightedIndex,
+  setHighlightedIndex,
+  onSelect,
+  closeDropdown,
+  userNavigatedRef
+}) {
+  if (!open) return;
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    userNavigatedRef.current = true;
+    setHighlightedIndex(index =>
+      Math.min(index + 1, options.length - 1)
+    );
+  }
+
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    userNavigatedRef.current = true;
+    setHighlightedIndex(index =>
+      Math.max(index - 1, 0)
+    );
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const option = options[highlightedIndex];
+    option && onSelect(option);
+  }
+
+  if (event.key === "Escape") {
+    closeDropdown();
+  }
+}
+
 function Select({
   options = [],
   value,
@@ -8,30 +48,40 @@ function Select({
   onClear,
   onSearch,
   onReachEnd,
-  loading = false,
-  hasMore = false,
-  multiple = true,
+  isLoading = false,
+  hasMoreOptions = false,
+  isMultipleAllowed = true,
   placeholder,
   renderOption,
-  renderSelectedValue
+  renderChipValue
 }) {
-  // Controlled check
+
+ // Controlled or uncontrolled
   const isControlled = value !== undefined;
 
-  // Internal state (uncontrolled)
   const [internalValue, setInternalValue] = useState(
-    multiple ? [] : null
+    isMultipleAllowed ? [] : null
   );
 
-  const selectedValue = isControlled
-    ? value
-    : internalValue;
+  const selectedValue = isControlled ? value : internalValue;
 
-  const normalizedValue = multiple
-    ? Array.isArray(selectedValue)
-      ? selectedValue
-      : []
-    : selectedValue ?? null;
+// Normalization
+let normalizedValue;
+
+if (isMultipleAllowed) {
+  if (Array.isArray(selectedValue)) {
+    normalizedValue = selectedValue;
+  } else {
+    normalizedValue = [];
+  }
+} else {
+  if (Array.isArray(selectedValue)) {
+    normalizedValue = null;
+  } else {
+    normalizedValue = selectedValue ?? null;
+  }
+}
+
 
   function updateValue(nextValue) {
     if (!isControlled) {
@@ -40,20 +90,63 @@ function Select({
     onChange?.(nextValue);
   }
 
-  // UI state
+// UI state
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
+ 
+ // Refs
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const debounceRef = useRef(null);
   const fetchingMoreRef = useRef(false);
-  const previousOptionsLengthRef = useRef(options.length);
   const userNavigatedRef = useRef(false);
 
-  // Outside click
+
+// Handlers
+  const displayList = isMultipleAllowed
+    ? normalizedValue
+    : normalizedValue
+    ? [normalizedValue]
+    : [];
+
+  const hasSelection = displayList.length > 0;
+
+  const closeDropdown = () => setOpen(false);
+  const toggleDropdown = () => setOpen(prev => !prev);
+
+  const handleWrapperKeyDown = event =>
+    handleDropdownKeyDown({
+      event,
+      open,
+      options,
+      highlightedIndex,
+      setHighlightedIndex,
+      onSelect: toggleOptionSelection,
+      closeDropdown,
+      userNavigatedRef
+    });
+
+  const handleClearClick = event => {
+    event.stopPropagation();
+    updateValue(isMultipleAllowed ? [] : null);
+    onClear?.();
+  };
+
+  const handleSearchChange = event => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(
+      () => onSearch?.(value.trim()),
+      300
+    );
+  };
+
+
+//  Effects
   useEffect(() => {
     function handleOutsideClick(event) {
       if (!wrapperRef.current?.contains(event.target)) {
@@ -65,34 +158,6 @@ function Select({
       document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  // Focus search
-  useEffect(() => {
-    if (open) {
-      inputRef.current?.focus();
-      setHighlightedIndex(0);
-    }
-  }, [open]);
-
-  // Pagination unlock
-  useEffect(() => {
-    if (options.length > previousOptionsLengthRef.current) {
-      fetchingMoreRef.current = false;
-    }
-    previousOptionsLengthRef.current = options.length;
-  }, [options.length]);
-
-  // Scroll highlight
-  useEffect(() => {
-    if (!open || !listRef.current) return;
-    if (!userNavigatedRef.current) return;
-
-    listRef.current.children[highlightedIndex]
-      ?.scrollIntoView({ block: "nearest" });
-
-    userNavigatedRef.current = false;
-  }, [highlightedIndex, open]);
-
-  // Reset search on close
   useEffect(() => {
     if (!open) {
       setSearchQuery("");
@@ -101,58 +166,43 @@ function Select({
     }
   }, [open]);
 
-  function handleKeyDown(event) {
-    if (!open) return;
 
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      userNavigatedRef.current = true;
-      setHighlightedIndex(i =>
-        Math.min(i + 1, options.length - 1)
-      );
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      userNavigatedRef.current = true;
-      setHighlightedIndex(i =>
-        Math.max(i - 1, 0)
-      );
-    }
-
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const option = options[highlightedIndex];
-      option && handleSelect(option);
-    }
-
-    if (event.key === "Escape") {
-      setOpen(false);
-    }
-  }
-
-  function handleSelect(option) {
-    if (!multiple) {
+// Selection logic
+  function toggleOptionSelection(option) {
+    if (!isMultipleAllowed) {
       updateValue(option);
       setOpen(false);
       return;
     }
 
-    const exists = normalizedValue.some(
-      item => item.id === option.id
+    const isAlreadySelected = normalizedValue.some(
+      value => value.id === option.id
     );
 
     updateValue(
-      exists
+      isAlreadySelected
         ? normalizedValue.filter(
-            item => item.id !== option.id
+            value => value.id !== option.id
           )
         : [...normalizedValue, option]
     );
   }
 
+  function handleChipRemove(option) {
+    return event => {
+      event.stopPropagation();
+      updateValue(
+        normalizedValue.filter(
+          value => value.id !== option.id
+        )
+      );
+    };
+  }
+
+
+// Scroll / pagination
   function handleScroll(event) {
-    if (!hasMore || fetchingMoreRef.current) return;
+    if (!hasMoreOptions || fetchingMoreRef.current) return;
 
     const element = event.currentTarget;
     if (
@@ -163,146 +213,136 @@ function Select({
       onReachEnd?.();
     }
   }
+// Class assignment to an option
+  function getOptionClassName({ selected, highlighted }) {
+    return `select-option ${
+      selected ? "selected" : ""
+    } ${highlighted ? "highlighted" : ""}`;
+  }
 
-  const displayList = multiple
-    ? normalizedValue
-    : normalizedValue
-    ? [normalizedValue]
-    : [];
+  function renderChips() {
+    if (!hasSelection) {
+      return (
+        <span className="placeholder">
+          {placeholder}
+        </span>
+      );
+    }
+    return displayList.map(option => (
+      <span key={option.id} className="chip">
+        {renderChipValue(option)}
 
-  return (
+        {isMultipleAllowed && (
+          <button
+            className="chip-remove"
+            onClick={handleChipRemove(option)}
+          >
+            ×
+          </button>
+        )}
+      </span>
+    ));
+  }
+
+  function renderOptions() {
+    return options.map((option, index) => {
+      const selected = isMultipleAllowed
+        ? normalizedValue.some(
+            value => value.id === option.id
+          )
+        : normalizedValue?.id === option.id;
+
+      return (
+        <li
+          key={option.id}
+          className={getOptionClassName({
+            selected,
+            highlighted: index === highlightedIndex
+          })}
+          onMouseEnter={() =>
+            setHighlightedIndex(index)
+          }
+          onClick={() =>
+            toggleOptionSelection(option)
+          }
+        >
+          {renderOption
+            ? renderOption(option, { selected })
+            : option.label}
+        </li>
+      );
+    });
+  }
+
+  function renderStatusRow() {
+    if (isLoading) {
+      return (
+        <li className="select-loading">
+          Loading…
+        </li>
+      );
+    }
+
+    if (!isLoading && options.length === 0) {
+      return (
+        <li className="select-empty">
+          No results
+        </li>
+      );
+    }
+
+    return null;
+  }
+
+  function renderDropdown() {
+    if (!open) return null;
+    return (
+      <>
+        <input
+          ref={inputRef}
+          className="select-search"
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+        <ul
+          ref={listRef}
+          className="select-dropdown"
+          onScroll={handleScroll}
+        >
+          {renderOptions()}
+          {renderStatusRow()}
+        </ul>
+      </>
+    );
+  }
+
+// Final render
+return (
     <div
       ref={wrapperRef}
       className="select-wrapper"
       tabIndex={0}
-      onKeyDown={handleKeyDown}
+      onKeyDown={handleWrapperKeyDown}
     >
       <div
         className="select-trigger"
-        onClick={() => setOpen(p => !p)}
+        onClick={toggleDropdown}
       >
         <div className="chips">
-          {displayList.map(item => (
-            <span key={item.id} className="chip">
-              <span className="chip-content">
-                {renderSelectedValue
-                  ? React.Children.toArray(
-                      renderSelectedValue(item)
-                    )
-                  : item.label}
-              </span>
-              {multiple && (
-                <button
-                  className="chip-remove"
-                  onClick={event => {
-                    event.stopPropagation();
-                    updateValue(
-                      normalizedValue.filter(
-                        v => v.id !== item.id
-                      )
-                    );
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))}
-
-          {displayList.length === 0 && (
-            <span className="placeholder">
-              {placeholder}
-            </span>
-          )}
+          {renderChips()}
         </div>
 
-        {displayList.length > 0 && (
+        {hasSelection && (
           <button
             className="clear-btn"
-            onClick={event => {
-              event.stopPropagation();
-              updateValue(multiple ? [] : null);
-              onClear?.();
-            }}
+            onClick={handleClearClick}
           >
             Clear
           </button>
         )}
       </div>
 
-      {open && (
-        <>
-          <input
-            ref={inputRef}
-            className="select-search"
-            value={searchQuery}
-            onChange={event => {
-              const val = event.target.value;
-              setSearchQuery(val);
-              clearTimeout(debounceRef.current);
-              debounceRef.current = setTimeout(
-                () => onSearch?.(val.trim()),
-                300
-              );
-            }}
-          />
-
-          <ul
-            ref={listRef}
-            className="select-dropdown"
-            onScroll={handleScroll}
-          >
-            {options.map((option, index) => {
-              const selected = multiple
-                ? normalizedValue.some(
-                    v => v.id === option.id
-                  )
-                : normalizedValue?.id === option.id;
-
-              const highlighted =
-                index === highlightedIndex;
-
-              return (
-                <li
-                  key={option.id}
-                  className={`select-option ${
-                    selected ? "selected" : ""
-                  } ${
-                    highlighted ? "highlighted" : ""
-                  }`}
-                  onMouseEnter={() =>
-                    setHighlightedIndex(index)
-                  }
-                  onClick={() =>
-                    handleSelect(option)
-                  }
-                >
-                  {renderOption
-                    ? React.Children.toArray(
-                        renderOption(option, {
-                          selected,
-                          highlighted
-                        })
-                      )
-                    : option.label}
-                </li>
-              );
-            })}
-
-            {loading && (
-              <li key="loading" className="select-loading">
-                Loading…
-              </li>
-            )}
-
-            {!loading && options.length === 0 && (
-              <li key="empty" className="select-empty">
-                No results
-              </li>
-            )}
-          </ul>
-        </>
-      )}
+      {renderDropdown()}
     </div>
   );
 }
