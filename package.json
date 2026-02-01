@@ -1,28 +1,30 @@
 {
   "name": "react-select-rohit10",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "type": "module",
-
   "description": "Async searchable select component with single and multi-select support",
-  "keywords": ["react", "select", "async", "multiselect"],
-
+  "keywords": [
+    "react",
+    "select",
+    "async",
+    "multiselect"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "types/index.d.ts",
-
-  "files": ["dist", "types"],
-
+  "files": [
+    "dist",
+    "types"
+  ],
   "scripts": {
     "build": "vite build",
     "prepublishOnly": "npm run build"
   },
-
   "peerDependencies": {
     "react": ">=17",
     "react-dom": ">=17"
   },
-
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
