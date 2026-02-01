@@ -1,18 +1,28 @@
 {
-  "name": "vite-project",
-  "private": true,
-  "version": "0.0.0",
+  "name": "react-select-rohit10",
+  "version": "1.0.0",
+  "license": "MIT",
   "type": "module",
+
+  "description": "Async searchable select component with single and multi-select support",
+  "keywords": ["react", "select", "async", "multiselect"],
+
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "types/index.d.ts",
+
+  "files": ["dist", "types"],
+
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "prepublishOnly": "npm run build"
   },
-  "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+
+  "peerDependencies": {
+    "react": ">=17",
+    "react-dom": ">=17"
   },
+
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
