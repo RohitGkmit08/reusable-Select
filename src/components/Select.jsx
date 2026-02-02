@@ -230,7 +230,9 @@ if (isMultipleAllowed) {
     }
     return displayList.map(option => (
       <span key={option.id} className="chip">
-        {renderChipValue(option)}
+        {renderChipValue
+          ? renderChipValue(option)
+          : option.label}
 
         {isMultipleAllowed && (
           <button
