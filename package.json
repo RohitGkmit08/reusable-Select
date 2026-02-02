@@ -1,6 +1,6 @@
 {
   "name": "react-select-rohit10",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "type": "module",
   "description": "Async searchable select component with single and multi-select support",
