@@ -1,21 +1,20 @@
 {
   "name": "react-select-rohit10",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
-
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./types/index.d.ts",
-
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
   },
-
-  "files": ["dist", "types"],
-
+  "files": [
+    "dist",
+    "types"
+  ],
   "peerDependencies": {
     "react": ">=17",
     "react-dom": ">=17"
