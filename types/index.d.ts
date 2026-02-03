@@ -5,37 +5,25 @@ export interface SelectOption {
   label: string;
 }
 
-export interface RenderOptionMeta {
-  selected: boolean;
-}
-
 export interface SelectProps {
   options: SelectOption[];
-
   value?: SelectOption | SelectOption[] | null;
-  onChange?: (
-    value: SelectOption | SelectOption[] | null
-  ) => void;
-
+  onChange?: (value: SelectOption | SelectOption[] | null) => void;
   onClear?: () => void;
   onSearch?: (query: string) => void;
   onReachEnd?: () => void;
-
   isLoading?: boolean;
   hasMoreOptions?: boolean;
   isMultipleAllowed?: boolean;
-
   placeholder?: string;
-
   renderOption?: (
     option: SelectOption,
-    meta: RenderOptionMeta
+    meta: {
+      selected: boolean;
+    }
   ) => React.ReactNode;
-
-  renderChipValue?: (
-    option: SelectOption
-  ) => React.ReactNode;
+  renderChipValue?: (option: SelectOption) => React.ReactNode;
 }
 
-declare const Select: React.FC<SelectProps>;
+declare function Select(props: SelectProps): React.ReactElement;
 export default Select;

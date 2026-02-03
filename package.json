@@ -1,48 +1,23 @@
 {
   "name": "react-select-rohit10",
-  "version": "1.0.3",
-  "description": "Async searchable select component with single and multi-select support",
-  "license": "MIT",
-  "keywords": [
-    "react",
-    "select",
-    "async",
-    "multiselect"
-  ],
+  "version": "1.0.4",
   "type": "module",
+
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./types/index.d.ts",
+
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./types/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist",
-    "types"
-  ],
-  "scripts": {
-    "build": "vite build",
-    "prepublishOnly": "npm run build"
-  },
+
+  "files": ["dist", "types"],
+
   "peerDependencies": {
     "react": ">=17",
     "react-dom": ">=17"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
-    "vite": "^7.2.4"
   }
 }

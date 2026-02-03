@@ -21,47 +21,52 @@ interface DropdownKeyDownParams {
   setHighlightedIndex: Dispatch<SetStateAction<number>>;
   onSelect: (option: SelectOption) => void;
   closeDropdown: () => void;
-  userNavigatedRef: React.MutableRefObject<boolean>;
+  userNavigatedRef: React.RefObject<boolean>;
 }
 
-function handleDropdownKeyDown({
-  event,
-  open,
-  options,
-  highlightedIndex,
-  setHighlightedIndex,
-  onSelect,
-  closeDropdown,
-  userNavigatedRef
-}: DropdownKeyDownParams): void {
+function handleDropdownKeyDown(
+  params: DropdownKeyDownParams
+): void {
+  const event = params.event;
+  const open = params.open;
+  const options = params.options;
+  const highlightedIndex = params.highlightedIndex;
+  const setHighlightedIndex = params.setHighlightedIndex;
+  const onSelect = params.onSelect;
+  const closeDropdown = params.closeDropdown;
+  const userNavigatedRef = params.userNavigatedRef;
+
   if (!open) return;
 
   if (event.key === "ArrowDown") {
     event.preventDefault();
     userNavigatedRef.current = true;
-    setHighlightedIndex((index: number) =>
-      Math.min(index + 1, options.length - 1)
-    );
+    setHighlightedIndex(function (index) {
+      return Math.min(index + 1, options.length - 1);
+    });
   }
 
   if (event.key === "ArrowUp") {
     event.preventDefault();
     userNavigatedRef.current = true;
-    setHighlightedIndex((index: number) =>
-      Math.max(index - 1, 0)
-    );
+    setHighlightedIndex(function (index) {
+      return Math.max(index - 1, 0);
+    });
   }
 
   if (event.key === "Enter") {
     event.preventDefault();
     const option = options[highlightedIndex];
-    if (option) onSelect(option);
+    if (option) {
+      onSelect(option);
+    }
   }
 
   if (event.key === "Escape") {
     closeDropdown();
   }
 }
+
 
 interface SelectProps {
   options: SelectOption[];
