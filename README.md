@@ -16,8 +16,8 @@ Built with:
 - Keyboard navigation
 - Single & multi-select support
 - Controlled and uncontrolled modes
-- ustom option rendering
-- ustom selected value (chip) rendering
+- custom option rendering
+- custom selected value (chip) rendering
 - Infinite scroll support
 
 
