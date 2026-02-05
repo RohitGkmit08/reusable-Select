@@ -1,9 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    dts({
+      entryRoot: "src",
+      outputDir: "dist",
+      insertTypesEntry: true
+    })
+  ],
   resolve: {
     dedupe: ["react", "react-dom"]
   },
@@ -12,8 +20,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "ReactSelectRohit10",
       formats: ["es", "cjs"],
-      fileName: format =>
-        format === "es" ? "index.js" : "index.cjs"
+      fileName: (format) => (format === "es" ? "index.js" : "index.cjs")
     },
     rollupOptions: {
       external: ["react", "react-dom"],
