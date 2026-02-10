@@ -1,3 +1,10 @@
+:root {
+  --select-border: #ccc;
+  --select-bg: #fff;
+  --select-option-highlight: #eee;
+  --chip-border: #aaa;
+}
+
 .select-wrapper {
   width: 100%;
   position: relative;
@@ -5,18 +12,18 @@
 }
 
 .select-trigger {
-  border: 1px solid #ccc;
+  border: 1px solid var(--select-border);
   padding: 8px;
   cursor: pointer;
 }
 
 .select-dropdown {
-  border: 1px solid #ccc;
+  border: 1px solid var(--select-border);
   max-height: 200px;
   overflow: auto;
   position: absolute;
   width: 100%;
-  background: white;
+  background: var(--select-bg);
   z-index: 10;
 }
 
@@ -26,7 +33,7 @@
 }
 
 .select-option.highlighted {
-  background: #eee;
+  background: var(--select-option-highlight);
 }
 
 .select-option.selected {
@@ -38,7 +45,7 @@
   gap: 6px;
   margin-right: 6px;
   padding: 4px 8px;
-  border: 1px solid #aaa;
+  border: 1px solid var(--chip-border);
   border-radius: 999px;
 }
 
