@@ -7,12 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local env files
 *.local
 
-# Editor directories and files
+# Vite
+.vite
+
+# Generated types 
+types
+
+# Editor / OS
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,4 +33,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.vite
