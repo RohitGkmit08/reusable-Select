@@ -1,0 +1,58 @@
+:root {
+  --select-border: #ccc;
+  --select-bg: #fff;
+  --select-option-highlight: #eee;
+  --chip-border: #aaa;
+}
+
+.select-wrapper {
+  width: 100%;
+  position: relative;
+  font-family: sans-serif;
+}
+
+.select-trigger {
+  border: 1px solid var(--select-border);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.select-dropdown {
+  border: 1px solid var(--select-border);
+  max-height: 200px;
+  overflow: auto;
+  position: absolute;
+  width: 100%;
+  background: var(--select-bg);
+  z-index: 10;
+}
+
+.select-option {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.select-option.highlighted {
+  background: var(--select-option-highlight);
+}
+
+.select-option.selected {
+  font-weight: bold;
+}
+
+.chip {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--chip-border);
+  border-radius: 999px;
+}
+
+.chip-remove {
+  cursor: pointer;
+}
+
+.clear-btn {
+  margin-left: auto;
+}

@@ -1,22 +1,29 @@
-# Reusable Select Component (React)
+# React Select Component
 
-A customizable, reusable Select (Dropdown) component built with React.  
-Supports controlled and uncontrolled usage, async data loading, error handling, and extensible UI behavior.
+An async, searchable Select component for React with support for **single select** and **multi-select** modes.
+
+Built with:
+- React
+- TypeScript
+- Keyboard navigation
+- Controlled & uncontrolled usage
 
 ---
 
 ## Features
 
+- Search with debounce
+- Keyboard navigation
+- Single & multi-select support
 - Controlled and uncontrolled modes
-- Async option loading support
-- Loading and error states
-- Keyboard and mouse interactions
-- Fully reusable and composable
-- Custom placeholder and labels
-- Clear / reset selection
+- custom option rendering
+- custom selected value (chip) rendering
+- Infinite scroll support
 
 
+---
 
+## Installation
 
-
-
+```bash
+npm install react-select-rohit10
