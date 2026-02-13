@@ -116,11 +116,17 @@ function Select({
   const userNavigatedRef = useRef<boolean>(false);
 
   /* ---------- derived ---------- */
-  const displayList: SelectOption[] = isMultipleAllowed
-    ? (normalizedValue as SelectOption[])
-    : normalizedValue
-    ? [normalizedValue as SelectOption]
-    : [];
+  let displayList: SelectOption[] = [];
+
+  if(isMultipleAllowed){
+    displayList = normalizedValue as SelectOption[]  
+  }else{
+    if(normalizedValue){
+      displayList = normalizedValue as SelectOption[]
+    }else{
+      displayList = []
+    }
+  }
 
   const hasSelection = displayList.length > 0;
 
